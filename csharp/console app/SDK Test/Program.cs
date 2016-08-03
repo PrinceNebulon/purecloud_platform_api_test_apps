@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace SDK_Test
     internal class Program
     {
         private static UserMe _me = null;
+
         [STAThread]
         private static void Main(string[] args)
         {
@@ -44,7 +46,7 @@ namespace SDK_Test
                 }
 
                 // Call test methods here
-                TestOutOfOffice();
+                TestUserAggregatesQuery();
 
                 Console.WriteLine("\nDone. Press any key...");
                 Console.ReadKey();
@@ -220,7 +222,27 @@ namespace SDK_Test
             var usersApi = new UsersApi();
             var ooo = new OutOfOffice(Active: true, StartDate: DateTime.Now, EndDate: DateTime.Now.AddMonths(1));
             var response = usersApi.PutUserIdOutofoffice(_me.Id, ooo);
+            Console.WriteLine(response);
         }
 
+        private static void TestUserAggregatesQuery()
+        {
+            var usersApi = new UsersApi();
+            var body = new AggregationQuery();
+            body.Interval = DateTime.Today.AddDays(-7).ToUniversalTime().ToString("s", CultureInfo.InvariantCulture) +
+                            "/" +
+                            DateTime.Today.AddDays(1).ToUniversalTime().ToString("s", CultureInfo.InvariantCulture);
+            body.Filter = new AnalyticsQueryFilter(Type: AnalyticsQueryFilter.TypeEnum.Or,
+                Predicates:
+                    new List<AnalyticsQueryPredicate>
+                    {
+                        new AnalyticsQueryPredicate(Dimension: AnalyticsQueryPredicate.DimensionEnum.Userid,
+                            Value: _me.Id)
+                    });
+            body.GroupBy = new List<AggregationQuery.GroupByEnum> {AggregationQuery.GroupByEnum.Userid};
+
+            var result = usersApi.PostUsersAggregatesQuery(body);
+            Console.WriteLine(result);
+        }
     }
 }
