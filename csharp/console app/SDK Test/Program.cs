@@ -14,8 +14,7 @@ namespace SDK_Test
 {
     internal class Program
     {
-        private static UsersApi _usersApi = null;
-
+        private static UserMe _me = null;
         [STAThread]
         private static void Main(string[] args)
         {
@@ -45,7 +44,7 @@ namespace SDK_Test
                 }
 
                 // Call test methods here
-                TestUserSearch();
+                TestOutOfOffice();
 
                 Console.WriteLine("\nDone. Press any key...");
                 Console.ReadKey();
@@ -67,8 +66,8 @@ namespace SDK_Test
             {
                 Configuration.Default.AccessToken = token;
                 var api = new UsersApi();
-                var me = api.GetMe();
-                Console.WriteLine($"Hello {me.Name}");
+                _me = api.GetMe();
+                Console.WriteLine($"Hello {_me.Name}");
                 SaveToken(token);
                 return true;
             }
@@ -169,14 +168,6 @@ namespace SDK_Test
         private static void TestOutboundApi()
         {
             var outboundApi = new OutboundApi();
-            /*
-            var listRequest = new ContactList(
-                "A List", 
-                null, 
-                new List<string>() {"phone","name","address"},
-                new List<ContactPhoneNumberColumn>() {new ContactPhoneNumberColumn("phone")});
-            var list = outboundApi.PostContactlists(listRequest);
-            */
             var listId = "f19465cf-5bc6-4871-b59f-5307575ddddf";
             var contacts = new List<DialerContact>();
             var contact = new DialerContact(null, listId, new Dictionary<string, object>
@@ -201,14 +192,14 @@ namespace SDK_Test
                 Fields = new List<string> {"name"}
             }));
 
-            _usersApi = new UsersApi();
-            var result1 = _usersApi.PostSearch(body);
+            var usersApi = new UsersApi();
+            var result1 = usersApi.PostSearch(body);
             var query = result1.CurrentPage.Split('=').Last();
 
             while (true)
             {
                 query = query.Replace("%3D", "=");
-                var result = _usersApi.GetSearch(query);
+                var result = usersApi.GetSearch(query);
                 if (result.Results != null)
                 {
                     result.Results.ForEach(user => Console.WriteLine(user.Name));
@@ -223,5 +214,13 @@ namespace SDK_Test
                 break;
             }
         }
+
+        private static void TestOutOfOffice()
+        {
+            var usersApi = new UsersApi();
+            var ooo = new OutOfOffice(Active: true, StartDate: DateTime.Now, EndDate: DateTime.Now.AddMonths(1));
+            var response = usersApi.PutUserIdOutofoffice(_me.Id, ooo);
+        }
+
     }
 }
