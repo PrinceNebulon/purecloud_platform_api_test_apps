@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
-using System.Windows.Forms.PropertyGridInternal;
 using ININ.PureCloud.OAuthControl;
 using ININ.PureCloudApi.Api;
 using ININ.PureCloudApi.Client;
@@ -22,6 +20,7 @@ namespace SDK_Test
         {
             try
             {
+                #region Auth
                 if (!GetSavedAuthToken())
                 {
                     // Create form
@@ -44,9 +43,13 @@ namespace SDK_Test
                     else
                         throw new Exception("Failed to authorize!");
                 }
+                #endregion
 
-                // Call test methods here
-                TestUserAggregatesQuery();
+                #region TEST METHODS
+
+                TestMakeConversation();
+
+                #endregion
 
                 Console.WriteLine("\nDone. Press any key...");
                 Console.ReadKey();
@@ -58,6 +61,8 @@ namespace SDK_Test
                 Console.ReadKey();
             }
         }
+
+        #region Helper methods
 
         private static bool GetSavedAuthToken()
         {
@@ -83,6 +88,25 @@ namespace SDK_Test
         {
             Properties.Settings.Default.AccessToken = token;
             Properties.Settings.Default.Save();
+        }
+
+        #endregion
+
+        #region Test methods
+
+        private static void TestMakeConversation()
+        {
+            var usersApi = new UsersApi();
+            Console.WriteLine($"Effective Station ID {usersApi.GetUserIdStation(_me.Id).EffectiveStation.Id}");
+
+            var conversationsApi = new ConversationsApi();
+            var call = conversationsApi.PostCalls(new CreateCallRequest(PhoneNumber: "3172222222"));
+            Console.WriteLine($"call: {call.ToJson()}");
+
+            Thread.Sleep(7000);
+
+            var calls = conversationsApi.GetCalls();
+            Console.WriteLine($"calls: {calls.ToJson()}");
         }
 
         private static void TestCreateStation()
@@ -244,5 +268,7 @@ namespace SDK_Test
             var result = usersApi.PostUsersAggregatesQuery(body);
             Console.WriteLine(result);
         }
+
+        #endregion
     }
 }
