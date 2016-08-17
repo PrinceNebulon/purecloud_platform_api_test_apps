@@ -8,6 +8,8 @@ using ININ.PureCloud.OAuthControl;
 using ININ.PureCloudApi.Api;
 using ININ.PureCloudApi.Client;
 using ININ.PureCloudApi.Model;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace SDK_Test
 {
@@ -47,7 +49,7 @@ namespace SDK_Test
 
                 #region TEST METHODS
 
-                TestMakeConversation();
+                TestWebSockets();
 
                 #endregion
 
@@ -93,6 +95,62 @@ namespace SDK_Test
         #endregion
 
         #region Test methods
+
+        private static void TestWebSockets()
+        {
+            var handler = new NotificationHandler();
+            handler.AddSubscription($"v2.users.{_me.Id}.presence", typeof(UserPresenceNotification));
+            handler.AddSubscription($"v2.users.{_me.Id}.conversations", typeof(ConversationNotification));
+            handler.NotificationReceived += (data) =>
+            {
+                Console.WriteLine(JsonConvert.SerializeObject(data, Formatting.Indented));
+
+                if (data.GetType() == typeof (NotificationData<UserPresenceNotification>))
+                {
+                    var presence = (NotificationData<UserPresenceNotification>) data;
+                    Console.WriteLine($"New presence: {presence.EventBody.PresenceDefinition.SystemPresence}");
+                }
+                else if (data.GetType() == typeof (NotificationData<ConversationNotification>))
+                {
+                    var conversation = (NotificationData<ConversationNotification>) data;
+                    Console.WriteLine($"Conversation: {conversation.EventBody.Id}");
+                }
+            };
+
+            Console.WriteLine("Websocket connected, awaiting messages...");
+            Console.WriteLine("Press any key to remove conversations subscription.");
+            Console.ReadKey(true);
+
+            handler.RemoveSubscription($"v2.users.{_me.Id}.conversations");
+
+            Console.WriteLine("Conversations subscription removed, awaiting messages...");
+            Console.ReadKey(true);
+        }
+
+        private static NotificationData<T> DeserializeNotification<T>(string data)
+        {
+            var notification = JsonConvert.DeserializeObject<NotificationData<JObject>>(data);
+            if (!notification.TopicName.Equals("", StringComparison.InvariantCultureIgnoreCase))
+                return null;
+            return JsonConvert.DeserializeObject<NotificationData<T>>(data);
+        }
+
+        private static void TestMakeCallback()
+        {
+            var d = DateTime.Parse("2009-06-15T13:45:30.123456-7");
+            var f = "yyyy-MM-ddThh:mm:ss.FFFK";
+            Console.WriteLine(d.ToString(f, CultureInfo.InvariantCulture));
+            Console.WriteLine(d.ToUniversalTime().ToString(f, CultureInfo.InvariantCulture));
+            return;
+            var conversationsApi = new ConversationsApi();
+            var callback = new CreateCallbackCommand(
+                QueueId: "636f60d4-04d9-4715-9350-7125b9b553db",
+                CallbackNumbers: new List<string> {"3179876873"},
+                CallbackScheduledTime: DateTime.Now.AddMinutes(10));
+            Console.WriteLine(callback.ToJson());
+            var response = conversationsApi.PostCallbacks(callback);
+            Console.WriteLine(response);
+        }
 
         private static void TestMakeConversation()
         {
