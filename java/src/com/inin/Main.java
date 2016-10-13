@@ -19,8 +19,8 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            Configuration.getDefaultApiClient().setAccessToken("qFW2vFnGP8Wmzt5BbS-StSN-9x5Xyi2Ui_DOKnDtwyY1PvihiJqrX_sAEkuOuNh9OY71Lwqq8ml7rpviBDytGw");
-            //Configuration.getDefaultApiClient().setShouldThrowErrors(false);
+            Configuration.getDefaultApiClient().setAccessToken("access token");
+            Configuration.getDefaultApiClient().setShouldThrowErrors(false);
             _usersApi = new UsersApi();
 
             ApiResponse<UserMe> me = _usersApi.getMeWithHttpInfo(Arrays.asList("presence"));
@@ -31,12 +31,31 @@ public class Main {
             _me = me.getResponseObject();
             System.out.println("Hello " + me.getResponseObject().getName());
 
-            //testConversations();
-            updatePresence();
+            testConversations();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void createUser() throws ApiException {
+        CreateUser body = new CreateUser();
+        body.setName("Firstname Børseth");
+        body.setDepartment("Sales");
+        body.setEmail("hollywoo+nordic2@mydevspace.com");
+        body.setTitle("Manager");
+        body.setPassword("1234abcdABCD!@#$");
+
+        ApiResponse<User> user = _usersApi.postUsersWithHttpInfo(body);
+        System.out.println(user.getException());
+        System.out.println("-----------------------");
+        System.out.println(user.getRequestHeaderData());
+        System.out.println("-----------------------");
+        System.out.println(user.getResponseHeaderData());
+        System.out.println("-----------------------");
+        System.out.println(user.getResponseObject());
+        System.out.println("-----------------------");
+        System.out.println(user.getRawRequestBody());
     }
 
     public static void testConversations() throws ApiException, IOException {
@@ -64,6 +83,7 @@ public class Main {
         mediaParticipantRequest.setHeld(true);
         ApiResponse response = conversationsApi.patchCallsCallIdParticipantsParticipantIdWithHttpInfo(callId, participantId, mediaParticipantRequest);
         System.out.println("response.getCorrelationId() -> " + response.getCorrelationId());
+        System.out.println("response.getResponseHeaderData() -> " + response.getResponseHeaderData());
         System.out.println("response.getResponseObject() -> " + response.getResponseObject());
     }
 
@@ -75,7 +95,7 @@ public class Main {
 
     public static void updatePresence() throws ApiException, IOException {
         PresenceApi presenceApi = new PresenceApi();
-        OrganizationPresenceEntityListing orgPresences = presenceApi.getPresencedefinitions(null, null, null);
+        OrganizationPresenceEntityListing orgPresences = presenceApi.getPresencedefinitions(null, null, null, null);
         OrganizationPresence available = null;
         OrganizationPresence busy = null;
         for (OrganizationPresence presence : orgPresences.getEntities()) {
@@ -109,6 +129,14 @@ public class Main {
         edge.setName("API Test 1");
         edge.setManaged(false);
         edge = api.postProvidersEdges(edge);
+        System.out.println(edge);
+    }
+
+    public static void testGetEdge() throws ApiException {
+        TelephonyProvidersEdgeApi api = new TelephonyProvidersEdgeApi();
+        EdgeEntityListing edges = api.getProvidersEdges(null, null, null, null, null, null);
+        System.out.println(edges);
+        Edge edge = api.getProvidersEdgesEdgeId(edges.getEntities().get(0).getId());
         System.out.println(edge);
     }
 
