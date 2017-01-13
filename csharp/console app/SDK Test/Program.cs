@@ -145,7 +145,7 @@ namespace SDK_Test
             var conversationsApi = new ConversationsApi();
             var callback = new CreateCallbackCommand(
                 QueueId: "636f60d4-04d9-4715-9350-7125b9b553db",
-                CallbackNumbers: new List<string> {"3179876873"},
+                CallbackNumbers: new List<string> {"3172222222"},
                 CallbackScheduledTime: DateTime.Now.AddMinutes(10));
             Console.WriteLine(callback.ToJson());
             var response = conversationsApi.PostCallbacks(callback);
