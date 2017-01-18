@@ -49,7 +49,7 @@ namespace SDK_Test
 
                 #region TEST METHODS
 
-                TestWebSockets();
+                TestSetRoutingStatus();
 
                 #endregion
 
@@ -80,8 +80,9 @@ namespace SDK_Test
                 SaveToken(token);
                 return true;
             }
-            catch
+            catch(Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return false;
             }
         }
@@ -96,24 +97,72 @@ namespace SDK_Test
 
         #region Test methods
 
+        private static void TestSetRoutingStatus()
+        {
+            var usersApi = new UsersApi();
+            var rs = new RoutingStatus(Status: RoutingStatus.StatusEnum.Idle);
+            Console.WriteLine(rs.ToJson());
+            usersApi.PutUserIdRoutingstatus(_me.Id, rs);
+        }
+
+        private static void TestPresence()
+        {
+            var presenceApi = new PresenceApi();
+
+            var currentPresence = presenceApi.GetUserIdPresencesSourceId(_me.Id, "PURECLOUD");
+
+            var presenceName = currentPresence.PresenceDefinition.SystemPresence;
+            if (currentPresence.PresenceDefinition.LanguageLabels?.ContainsKey("en-us") == true)
+                presenceName = currentPresence.PresenceDefinition.LanguageLabels["en-us"];
+            Console.WriteLine($"Current presence is {presenceName}");
+
+            var definitions = presenceApi.GetPresencedefinitions();
+
+            OrganizationPresence newPresence = null;
+
+            foreach (var presence in definitions.Entities)
+            {
+                if (presence.Id != currentPresence.PresenceDefinition.Id)
+                {
+                    newPresence = presence;
+                    break;
+                }
+            }
+
+            presenceName = newPresence.SystemPresence;
+            if (newPresence.LanguageLabels?.ContainsKey("en-us") == true)
+                presenceName = newPresence.LanguageLabels["en-us"];
+            Console.WriteLine($"Changing presence to {presenceName}");
+            var body = new UserPresence(PresenceDefinition: newPresence, Source: "PURECLOUD", Primary: true);
+            Console.WriteLine(body.ToJson());
+            presenceApi.PatchUserIdPresencesSourceId(_me.Id, "PURECLOUD", body);
+        }
+
         private static void TestWebSockets()
         {
             var handler = new NotificationHandler();
             handler.AddSubscription($"v2.users.{_me.Id}.presence", typeof(UserPresenceNotification));
-            handler.AddSubscription($"v2.users.{_me.Id}.conversations", typeof(ConversationNotification));
+            //handler.AddSubscription($"v2.users.{_me.Id}.conversations", typeof(ConversationNotification));
+            handler.AddSubscription($"v2.users.{_me.Id}.routingStatus", typeof(UserRoutingStatusNotification));
+
             handler.NotificationReceived += (data) =>
             {
-                Console.WriteLine(JsonConvert.SerializeObject(data, Formatting.Indented));
 
                 if (data.GetType() == typeof (NotificationData<UserPresenceNotification>))
                 {
                     var presence = (NotificationData<UserPresenceNotification>) data;
                     Console.WriteLine($"New presence: {presence.EventBody.PresenceDefinition.SystemPresence}");
                 }
-                else if (data.GetType() == typeof (NotificationData<ConversationNotification>))
+                else if (data.GetType() == typeof(NotificationData<ConversationNotification>))
                 {
-                    var conversation = (NotificationData<ConversationNotification>) data;
+                    var conversation = (NotificationData<ConversationNotification>)data;
                     Console.WriteLine($"Conversation: {conversation.EventBody.Id}");
+                }
+                else if (data.GetType() == typeof(NotificationData<UserRoutingStatusNotification>))
+                {
+                    var routingStatus = (NotificationData<UserRoutingStatusNotification>)data;
+                    Console.WriteLine($"Routing Status: {routingStatus.EventBody.RoutingStatus.Status}");
+                    Console.WriteLine(routingStatus.EventBody.ToJson());
                 }
             };
 
