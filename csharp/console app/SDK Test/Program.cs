@@ -49,7 +49,9 @@ namespace SDK_Test
 
                 #region TEST METHODS
 
-                TestSetRoutingStatus();
+                TestGetUserIdQueues(true);
+                TestSetUserIdQueues();
+                TestGetUserIdQueues(true);
 
                 #endregion
 
@@ -96,6 +98,44 @@ namespace SDK_Test
         #endregion
 
         #region Test methods
+
+        private static void TestSetUserIdQueues()
+        {
+            Console.WriteLine("===== SET QUEUES =====");
+            var apiInstance = new UsersApi();
+
+            // get queues
+            var queues = apiInstance.GetUserIdQueues(userId: _me.Id).Entities;
+
+            // Toggle joined
+            var queue = queues.FirstOrDefault(q => q.Id == "636f60d4-04d9-4715-9350-7125b9b553db");
+            if (queue != null)
+                queue.Joined = !queue.Joined;
+            else
+                throw new Exception("Couldn't find queue!");
+
+            // Send
+            var result = apiInstance.PatchUserIdQueues(_me.Id, queues);
+            Console.WriteLine(result);
+        }
+
+        private static void TestGetUserIdQueues(bool? joined = null)
+        {
+            Console.WriteLine($"===== GET {(joined == true ? "JOINED" : "ALL")} QUEUES =====");
+            var apiInstance = new UsersApi();
+            var result = apiInstance.GetUserIdQueues(userId: _me.Id, joined: joined);
+            foreach (var q in result.Entities)
+            {
+                Console.WriteLine($"  {q.Name} ({q.Joined})");
+            }
+        }
+
+        private static void TestGetProvidersEdges()
+        {
+            var apiInstance = new TelephonyProvidersEdgeApi();
+            var result = apiInstance.GetProvidersEdges(managed: true);
+            Console.WriteLine(result);
+        }
 
         private static void TestSetRoutingStatus()
         {

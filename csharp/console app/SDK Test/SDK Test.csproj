@@ -38,8 +38,8 @@
       <HintPath>..\packages\PureCloudOAuthControl.1.2.0.0\lib\ININ.PureCloud.OAuthControl.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ININ.PureCloudApi, Version=0.100.16.29, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\PureCloudApiSdk.0.100.16.29-prerelease\lib\ININ.PureCloudApi.dll</HintPath>
+    <Reference Include="ININ.PureCloudApi, Version=0.104.13.409, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\PureCloudApiSdk.0.104.13.409\lib\ININ.PureCloudApi.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -78,9 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
